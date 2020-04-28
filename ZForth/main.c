@@ -34,7 +34,7 @@ ssize_t getline(char** lineptr, size_t* n, FILE* stream) {
     if (*lineptr == NULL) {
         *lineptr = malloc(128);
         if (*lineptr == NULL) {
-            return -1
+            return -1;
         }
         *n = 128;
     }
@@ -103,6 +103,7 @@ int main(int argc, char **argv) {
 
 	while (forth_step(forth, &simplecallback, NULL) == 0) {
 		// System is running...
+        // This is only in case future/user-modified implementations insert any startup code in the VM themselves. Otherwise will stop immediately.
 	}
 
     fprintf(stderr, "Registering system functions.\n");
@@ -112,9 +113,10 @@ int main(int argc, char **argv) {
     forth_setlookupinstr(forth, "sys.lognum", forth_encode(forth, FORTH_OP_CALLSYS, 10));
     forth_setlookupinstr(forth, "sys.logstr", forth_encode(forth, FORTH_OP_CALLSYS, 11));
     forth_setlookupinstr(forth, "sys.logstack", forth_encode(forth, FORTH_OP_CALLSYS, 12));
-    fprintf(stderr, "sys1=0x%x (type %d)", forth_lookupinstr(forth, "sys1"), forth_lookupinstr(forth, "sys1") & 0xf);
-    fprintf(stderr, "%d %d\n", forth_lookuptableaddr(forth, "sys1"), forth_lookuptableaddr(forth, "sys1"));
-
+    //fprintf(stderr, "sys1=0x%x (type %d)", forth_lookupinstr(forth, "sys1"), forth_lookupinstr(forth, "sys1") & 0xf);
+    //fprintf(stderr, "%d %d\n", forth_lookuptableaddr(forth, "sys1"), forth_lookuptableaddr(forth, "sys1"));
+    
+    /* This was the initial implementation, which shows the ahead-of-time compilation abilities. 
 	fprintf(stderr, "Awaiting commands until \"EOF\".\n");
 
 	char* lbuffer = malloc(1024);
@@ -132,14 +134,47 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Running commands.\n");
 
     forth->header.pc = forth->header.codestart;
-    fprintf(stderr, "instr is %x\n", forth->data.words[forth->header.pc]);
-    fprintf(stderr, "... %d %d %d\n", forth->header.pc, forth->header.dsp, forth->header.rsp);
+    //fprintf(stderr, "instr is %x\n", forth->data.words[forth->header.pc]);
+    //fprintf(stderr, "... %d %d %d\n", forth->header.pc, forth->header.dsp, forth->header.rsp);
 
 	while (forth_step(forth, &simplecallback, NULL) == 0) {
-        fprintf(stderr, "instr is %x\n", forth->data.words[forth->header.pc]);
-        fprintf(stderr, "... %d %d %d\n", forth->header.pc, forth->header.dsp, forth->header.rsp);
+        //fprintf(stderr, "instr is %x\n", forth->data.words[forth->header.pc]);
+        //fprintf(stderr, "... %d %d %d\n", forth->header.pc, forth->header.dsp, forth->header.rsp);
 		// System is running...
 	}
+    */
+
+    /* The new implementation shows the ability to make a simple read-eval-print loop. */
+    bool vmstopped = false;
+    while (!vmstopped) {
+        fprintf(stdout, "[EXIT to quit] > "); // Display a simple prompt.
+
+        // Allocate a small buffer, enough to hopefully fit any reasonable line of code.
+        char* lbuffer = malloc(1024);
+        lbuffer[0] = 0;
+        size_t lsize = 1024;
+
+        size_t n = getline(&lbuffer, &lsize, stdin);
+
+        if (strcmp(lbuffer, "EXIT\n") == 0 || strcmp(lbuffer, "EXIT") == 0 || strcmp(lbuffer, "EXIT\r\n") == 0) {
+            vmstopped = true;
+        } else if (n > 0) {
+            // This ensures the next execution will begin where the line is assembled to.
+            forth->header.pc = forth->header.codenext;
+
+            // Assemble the line (this function is just a simple loop using the built-in assembler, TODO: Better error handling)
+            assemble(forth, (const char*)lbuffer, (forth_word_t)n);
+
+            // Begin execution.
+            while ((!vmstopped) && forth_step(forth, &simplecallback, NULL) == 0) {
+                // System is running...
+            }
+        } else {
+            // Just ignore empty lines.
+        }
+
+        free(lbuffer);
+    }
 
 	fprintf(stderr, "Done.\n");
 

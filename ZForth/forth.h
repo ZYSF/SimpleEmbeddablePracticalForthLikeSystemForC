@@ -171,14 +171,14 @@ FORTH_INLINE forth_word_t forth_poke(forth_t* forth, forth_word_t addr, forth_wo
 
 FORTH_INLINE forth_word_t forth_peekstrl(forth_t* forth, forth_word_t startaddr, forth_word_t lenout, char* strout) {
 	forth_word_t h = forth_peek(forth, startaddr);
-	fprintf(stderr, "Peeking string with code %x\n", h);
+	//fprintf(stderr, "Peeking string with code %x\n", h);
 	if ((h & 0xF) != 4 || (h >> 4) + 1 > lenout) {
 		return -1;
 	}
 	forth_word_t i;
 	for (i = 0; i <= (h >> 4); i++) {
 		strout[i] = (i < (h >> 4) ? forth_peek(forth, startaddr + 1 + i) : 0);
-		fprintf(stderr, "Got %d\n", (i < (h >> 4) ? forth_peek(forth, startaddr + 1 + i) : 0));
+		//fprintf(stderr, "Got %d\n", (i < (h >> 4) ? forth_peek(forth, startaddr + 1 + i) : 0));
 	}
 	return (h >> 4);
 }
@@ -216,7 +216,7 @@ FORTH_INLINE forth_word_t forth_allocstrl(forth_t* forth, forth_word_t len, cons
 	if (tmp > 0) {
 		forth_word_t oldnext = forth->header.heapnext;
 		forth->header.heapnext = tmp;
-		fprintf(stderr, "Allocated '%s' at %d with size %d\n", str, oldnext, tmp - oldnext);
+		//fprintf(stderr, "Allocated '%s' at %d with size %d\n", str, oldnext, tmp - oldnext);
 		return oldnext;
 	} else {
 		return 0;
@@ -237,7 +237,7 @@ FORTH_INLINE forth_word_t forth_lookuptableaddrl(forth_t* forth, const char* nam
 
 	for (i = forth->header.indexstart; i < forth->header.indexnext; i += 2) {
 		tmpl = forth_peekstrl(forth, forth_peek(forth, i), 100, tmpstr);
-		fprintf(stderr, "Looking at '%s'", tmpstr);
+		//fprintf(stderr, "Looking at '%s'", tmpstr);
 		if (tmpl == len) {
 			int j;
 			bool iseq = true;
@@ -302,7 +302,7 @@ FORTH_INLINE forth_word_t forth_tokentype(forth_t* forth, const char* source, fo
 		return 2;
 	} else if ((source[i] >= 'a' && source[i] <= 'z') || (source[i] >= 'A' && source[i] <= 'Z') || (source[i] == '_')) {
 		return 3;
-	} else if (source[i] == '+' || source[i] == '-' || source[i] == '=' || source[i] == '&' || source[i] == '|' || source[i] == '?' || source[i] == '!' || source[i] == ';') {
+	} else if (source[i] == '+' || source[i] == '-' || source[i] == '*' || source[i] == '/' || source[i] == '%' || source[i] == '=' || source[i] == '&' || source[i] == '|' || source[i] == '?' || source[i] == '!' || source[i] == ';') {
 		return 4;
 	} else if (source[i] == '[' || source[i] == ']') {
 		return 5;
@@ -392,13 +392,13 @@ FORTH_INLINE forth_word_t forth_assemble(forth_t* forth, const char* source, for
 		tmp = forth_lookuptableaddrl(forth, source + i, len);
 		if (tmp > 0) {
 			if (forth_poke(forth, forth->header.codenext, ((tmp + 1) << 4) | 7)) {
-				fprintf(stderr, "Failed to store within index\n");
+				//fprintf(stderr, "Failed to store within index\n");
 				return 0;
 			}
-			fprintf(stderr, "Put a %x at %d\n", ((tmp + 1) << 4) | 7, forth->header.codenext);
+			//fprintf(stderr, "Put a %x at %d\n", ((tmp + 1) << 4) | 7, forth->header.codenext);
 			forth->header.codenext++;
 		} else {
-			fprintf(stderr, "Failed to index\n");
+			//fprintf(stderr, "Failed to index\n");
 			return 0;
 		}
 		break;
@@ -520,7 +520,7 @@ FORTH_INLINE forth_word_t forth_step(forth_t* forth, forth_callback_t callback, 
 	case 6: // Return op
 		forth->header.pc = forth_popreturn(forth) + 1;
 		if (forth_peek(forth, forth->header.pc - 1) == 9) { // Special handling of return-to-!-loop
-			fprintf(stderr, "Returning to loop\n");
+			//fprintf(stderr, "Returning to loop\n");
 			forth_word_t w = forth_popdata(forth); // Pop a boolean value from the stack
 			if (w != 0) { // Repeat loop if value != 0
 				fprintf(stderr, "Repeating loop\n");
@@ -530,7 +530,7 @@ FORTH_INLINE forth_word_t forth_step(forth_t* forth, forth_callback_t callback, 
 		break;
 	case 7: { // Call by index lookup (data is pointer to instruction in table)
 		forth_word_t tmp = forth_peek(forth, instr >> 4);
-		fprintf(stderr, "Looking up %d (type %d)\n", tmp, tmp & 0xf);
+		//fprintf(stderr, "Looking up %d (type %d)\n", tmp, tmp & 0xf);
 		// Execute a single function or system call inline
 		switch (tmp & 0xF) {
 		case 1: // Call already-known function
