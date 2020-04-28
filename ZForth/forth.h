@@ -1,6 +1,4 @@
 /* Zak's really really ridiculously small FORTH-style system.
- * Contact me via GitHub for commercial support or implementation of other convenient and small systems.
- * I check GitHub monthly. Sabali.
  * PUBLIC DOMAIN BY EDICT OF THE AUTHOR.
  * No copyright, no warranty, only code.
  * Use the MIT or BSD licenses if you prefer. I don't require (or forbid) attribution.
