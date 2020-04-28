@@ -327,9 +327,14 @@ FORTH_INLINE forth_word_t forth_tokenlength(forth_t* forth, const char* source, 
 		}
 		break;
 	case 2:
-		i++;
+		result = 1;
 		while (i + result < totallen && source[i + result] != '\"') {
 			result++;
+		}
+		if (source[i + result] == '\"') {
+			result++;
+		} else {
+			return 0;
 		}
 		break;
 	case 3:
@@ -460,9 +465,11 @@ FORTH_INLINE forth_word_t forth_step(forth_t* forth, forth_callback_t callback, 
 		forth->header.pc++;
 		break;
 	case 4: // Push inline string
-		forth_pushdata(forth, forth->header.pc - 1);
+		fprintf(stderr, "Pushing string %d\n", forth->header.pc);
+		forth_pushdata(forth, forth->header.pc);
 		forth->header.pc++;
 		forth->header.pc += instr >> 4;
+		fprintf(stderr, "Done %d\n", forth->header.pc);
 		break;
 	case 5: { // Simple op
 		forth_word_t rhs = forth_popdata(forth);
@@ -523,7 +530,7 @@ FORTH_INLINE forth_word_t forth_step(forth_t* forth, forth_callback_t callback, 
 			//fprintf(stderr, "Returning to loop\n");
 			forth_word_t w = forth_popdata(forth); // Pop a boolean value from the stack
 			if (w != 0) { // Repeat loop if value != 0
-				fprintf(stderr, "Repeating loop\n");
+				//fprintf(stderr, "Repeating loop\n");
 				forth->header.pc--;
 			}
 		}

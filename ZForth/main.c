@@ -71,6 +71,12 @@ forth_word_t simplecallback(forth_t* forth, void* udata, int sysnum) {
     case 10:
         fprintf(stdout, "LOGNUM %d\n", forth_popdata(forth));
         return 0;
+    case 11: {
+        char strbuf[100];
+        forth_peekstrl(forth, forth_popdata(forth), 100, strbuf);
+        fprintf(stdout, "LOGSTR \"%s\"\n", strbuf);
+        return 0;
+    }
     default:
         fprintf(stderr, "ERROR: Callback called with sysnum %d\n", sysnum);
         return -1;
@@ -78,17 +84,20 @@ forth_word_t simplecallback(forth_t* forth, void* udata, int sysnum) {
     
 }
 
-void assemble(forth_t* forth, const char* src, forth_word_t len) {
+bool assemble(forth_t* forth, const char* src, forth_word_t len) {
     forth_word_t i = 0;
     forth_word_t result = 0;
     while ((result = forth_assemble(forth, src, i, len)) > 0) {
-        fprintf(stderr, "Token is %d len is %d\n", forth_tokentype(forth, src, i, len), forth_tokenlength(forth, src, i, len));
-        fprintf(stderr, "Assembled %d characters from character %d\n", result, i);
-        fprintf(stderr, "Next asm address is %d\n", forth->header.codenext);
+        //fprintf(stderr, "Token is %d len is %d\n", forth_tokentype(forth, src, i, len), forth_tokenlength(forth, src, i, len));
+        //fprintf(stderr, "Assembled %d characters from character %d\n", result, i);
+        //fprintf(stderr, "Next asm address is %d\n", forth->header.codenext);
         i += result;
     }
     if (result != 0) {
         fprintf(stderr, "Error at character %d\n", i);
+        return false;
+    } else {
+        return true;
     }
 }
 
@@ -163,10 +172,10 @@ int main(int argc, char **argv) {
             forth->header.pc = forth->header.codenext;
 
             // Assemble the line (this function is just a simple loop using the built-in assembler, TODO: Better error handling)
-            assemble(forth, (const char*)lbuffer, (forth_word_t)n);
+            bool okay = assemble(forth, (const char*)lbuffer, (forth_word_t)n);
 
             // Begin execution.
-            while ((!vmstopped) && forth_step(forth, &simplecallback, NULL) == 0) {
+            while (okay && (!vmstopped) && forth_step(forth, &simplecallback, NULL) == 0) {
                 // System is running...
             }
         } else {
