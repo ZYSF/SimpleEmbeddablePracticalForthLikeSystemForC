@@ -10,6 +10,8 @@ dynamic functionality into low-cost chips. You will almost invariably need FORTH
 is bound to be either too slow (Smalltalk, LISP, JavaScript, etc.), too large (Java, .NET), too limited (Oberon, p-code) or too static (C, C++,
 D). Of course, you could always change one of those solutions to fit, but you'd just end up with a really complicated FORTH.
 
+(I actually spent... Weeks? Working on a system that matched Java 1.1 feature-to-feature. By the time I got it half working, I realised "fuck this is much less efficient than FORTH").
+
 ## Why a new FORTH?
 
 Primarily, licensing and portability. There are a number of "portable", "simple", "practical", "embeddable" and "public domain" 
@@ -23,7 +25,16 @@ Other implementations often focus on standards compliance and self-hosting, desp
 
 So, this version isn't standards-compliant at all; You probably couldn't even cleanly implement a lot of standard FORTH words on top of it because the function names are restricted to sensible ones. But, it should be simpler, more embeddable, more practical and perhaps even more FORTH-like than the rest :).
 
-It's also completely public domain. Fuck copyright.
+Some major differences between this and standard FORTH (most other FORTH-like systems) are:
+
+1. Strings are handled "more intuitively" and the assembler only supports ASCII but they fit UTF-32 and programs should assume either full Unicode or unknown character encoding.
+2. Extremely simple operations, such as integer maths, comparisons and primitive loops, are all inlined (not implemented as indexed high-level words, they're just instructions like for a CPU instead).
+3. There is no built-in I/O. Input and output are considered operating system or application features, not language or VM features.
+4. Named words are restricted to `_Simple.englishStyle99` (i.e. the same characters typically used to identify names in C/Pascal/Java/C#/Python/etc. names, including dots and underscores to enable application-specific namespaces or other conventions), which is a bit more readable than the usual `$#!7` style. I understand this won't be enough for some use cases, but customising the assembler to handle different cases (or just translating the names into readable ones first) should be easy enough.
+5. The memory layout is significant and implementations may limit memory access of specific operations only to the relevant memory sections or kill programs that attempt to use memory outside conventional (safe) bounds.
+6. Consideration has been given to potential modern use-cases including 1) garbage-collection is made easier by having a consistent and well-defined memory layout, 2) hypervirtualisation is enabled by making the entire system embeddable to the extreme, 3) advanced multitasking is really just a special case of hypervirtualisation, and 4) storing everything in 32-bit words makes it easy to exchange (even running-but-paused) programs between machines or networks with different endianness conventions.
+
+It's also ridiculously small and completely public domain. Fuck copyright.
 
 ## If it doesn't comply with FORTH standards, why not call it something new?
 
