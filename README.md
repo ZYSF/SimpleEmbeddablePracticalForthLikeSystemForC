@@ -1,6 +1,20 @@
 # SimpleEmbeddablePracticalForthLikeSystemForC
 Like it says on the box. No frills.
 
+**Still under development. Not thoroughly tested!**
+
+## Features
+
+* Supports simple reverse-polish stack-based operations, e.g. `1 1 +` would result in `2` being pushed to the stack
+* Supports defining named words for complex behaviour (but requires some support to add new words to the dictionary from within the system, i.e. there's no built-in function for that exposed within the VM but it's easily accessible from within native calls or elsewhere in the host application)
+* Suitable for use in real-time applications (each interpreter step is of bounded complexity, there is no instruction that e.g. copies a whole array or searches a whole list, so a host program can easily run embedded programs in short bursts while still checking sensors and such regularly without ever skipping a beat - and importantly without relying on harder-to-debug interrupt setups)
+* Implemented entirely in a C header for easy embedding in portable/native applications (a very simple example is given in main.c)
+* Only defines static/inline functions (so a host application can include multiple versions or configurations of the VM without them conflicting, provided they're used in different modules of the host application)
+* Programs within the VM are entirely encapsulated within a single array, the VM doesn't require any dynamic memory allocations or other complex interactions with the host environment
+* Easy to pause/resume/load/save programs (as easy as copying or reading/writing an array of integers)
+* Has a built-in assembler accessible to the host program, can compile interactively for a read-eval-print loop or compile in batches to run later (the assembler function just assembles one word at a time in any case)
+* Doesn't have any built-in I/O operations, allowing the whole I/O system to be controlled by the host program
+
 ## Why FORTH?
 
 I was experimenting with C and Java style systems for embedded development but they are just not practical enough.
@@ -32,7 +46,7 @@ Some major differences between this and standard FORTH (most other FORTH-like sy
 3. There is no built-in I/O. Input and output are considered operating system or application features, not language or VM features.
 4. Named words are restricted to `_Simple.englishStyle99` (i.e. the same characters typically used to identify names in C/Pascal/Java/C#/Python/etc. names, including dots and underscores to enable application-specific namespaces or other conventions), which is a bit more readable than the usual `$#!7` style. I understand this won't be enough for some use cases, but customising the assembler to handle different cases (or just translating the names into readable ones first) should be easy enough.
 5. The memory layout is significant and implementations may limit memory access of specific operations only to the relevant memory sections or kill programs that attempt to use memory outside conventional (safe) bounds.
-6. Consideration has been given to potential modern use-cases including 1) garbage-collection is made easier by having a consistent and well-defined memory layout, 2) hypervirtualisation is enabled by making the entire system embeddable to the extreme, 3) advanced multitasking is really just a special case of hypervirtualisation, and 4) storing everything in 32-bit words makes it easy to exchange (even running-but-paused) programs between machines or networks with different endianness conventions.
+6. Consideration has been given to potential modern use-cases including 1) garbage-collection is made easier by having a consistent and well-defined memory layout, 2) virtualisation of the system within itself is enabled by making the entire system embeddable to the extreme (a FORTH program could control other FORTH programs just by the host application exposing some of the VM functions to the program), 3) advanced multitasking is really just a special case of virtualisation, and 4) storing everything in 32-bit words makes it easy to exchange (even running-but-paused) programs between machines or networks with different endianness conventions.
 
 It's also ridiculously small and completely public domain. Fuck copyright.
 
