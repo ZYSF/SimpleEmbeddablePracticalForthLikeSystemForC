@@ -3,7 +3,7 @@
  *
  * -Zak.
  */
-#define FORTH_16BIT
+//#define FORTH_16BIT
 #include "forth.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,6 +77,12 @@ forth_word_t simplecallback(forth_t* forth, void* udata, int sysnum) {
         fprintf(stdout, "LOGSTR \"%s\"\n", strbuf);
         return 0;
     }
+    case 20: {
+        char strbuf[100];
+        forth_word_t n = forth_peekstrl(forth, forth_popdata(forth), 100, strbuf);
+        forth_setlookupinstrl(forth, strbuf, n, forth_encode(forth, FORTH_OP_CALLADDR, forth_popdata(forth)));
+        return 0;
+    }
     default:
         fprintf(stderr, "ERROR: Callback called with sysnum %d\n", sysnum);
         return -1;
@@ -121,9 +127,13 @@ int main(int argc, char **argv) {
     forth_setlookupinstr(forth, "sys2", forth_encode(forth, FORTH_OP_CALLSYS, 2));
     forth_setlookupinstr(forth, "sys3", forth_encode(forth, FORTH_OP_CALLSYS, 3));
     forth_setlookupinstr(forth, "sys1", forth_encode(forth, FORTH_OP_CALLSYS, 1));
+
     forth_setlookupinstr(forth, "sys.lognum", forth_encode(forth, FORTH_OP_CALLSYS, 10));
     forth_setlookupinstr(forth, "sys.logstr", forth_encode(forth, FORTH_OP_CALLSYS, 11));
     forth_setlookupinstr(forth, "sys.logstack", forth_encode(forth, FORTH_OP_CALLSYS, 12));
+
+    forth_setlookupinstr(forth, "sys.reg", forth_encode(forth, FORTH_OP_CALLSYS, 20));
+
     //fprintf(stderr, "sys1=0x%x (type %d)", forth_lookupinstr(forth, "sys1"), forth_lookupinstr(forth, "sys1") & 0xf);
     //fprintf(stderr, "%d %d\n", forth_lookuptableaddr(forth, "sys1"), forth_lookuptableaddr(forth, "sys1"));
     

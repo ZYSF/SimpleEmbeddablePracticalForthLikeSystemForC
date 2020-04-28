@@ -546,6 +546,8 @@ FORTH_INLINE forth_word_t forth_step(forth_t* forth, forth_callback_t callback, 
 				//fprintf(stderr, "Repeating loop\n");
 				forth->header.pc--;
 			}
+		} else {
+			//fprintf(stderr, "Eventual return address is %d\n", forth->header.pc);
 		}
 		break;
 	case 7: { // Call by index lookup (data is pointer to instruction in table)
@@ -554,6 +556,7 @@ FORTH_INLINE forth_word_t forth_step(forth_t* forth, forth_callback_t callback, 
 		// Execute a single function or system call inline
 		switch (tmp & 0xF) {
 		case 1: // Call already-known function
+			//fprintf(stderr, "Pushing return addr %d\n", forth->header.pc);
 			forth_pushreturn(forth, forth->header.pc);
 			forth->header.pc = tmp >> 4;
 			break;
