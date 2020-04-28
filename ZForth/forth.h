@@ -18,7 +18,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef FORTH_16BIT
+typedef int16_t forth_word_t;
+#else
+#ifdef FORTH_64BIT
+typedef int64_t forth_word_t;
+#else
 typedef int32_t forth_word_t;
+#endif
+#endif
+
 typedef union forth forth_t;
 typedef struct forth_header forth_header_t;
 typedef struct forth_data forth_data_t;
@@ -462,14 +471,18 @@ FORTH_INLINE forth_word_t forth_step(forth_t* forth, forth_callback_t callback, 
 		break;
 	case 2: // Call system function
 		result = callback(forth, udata, instr >> 4);
-		forth->header.pc++;
+		if (result == 0) {
+			// A system function can return non-zero to pause the interpreter for later execution. In this case the same instruction will run again.
+			// But normally, we return to the following instruction.
+			forth->header.pc++;
+		}
 		break;
 	case 4: // Push inline string
-		fprintf(stderr, "Pushing string %d\n", forth->header.pc);
+		//fprintf(stderr, "Pushing string %d\n", forth->header.pc);
 		forth_pushdata(forth, forth->header.pc);
 		forth->header.pc++;
 		forth->header.pc += instr >> 4;
-		fprintf(stderr, "Done %d\n", forth->header.pc);
+		//fprintf(stderr, "Done %d\n", forth->header.pc);
 		break;
 	case 5: { // Simple op
 		forth_word_t rhs = forth_popdata(forth);
@@ -567,12 +580,6 @@ FORTH_INLINE forth_word_t forth_step(forth_t* forth, forth_callback_t callback, 
 
 	return 0;
 }
-
-
-#ifdef FORTH_IMPL
-
-/* From ifdef FORTH_IMPL: */
-#endif
 
 /* From ifndef FORTH_H at top of file: */
 #endif 

@@ -3,7 +3,7 @@
  *
  * -Zak.
  */
-#define FORTH_IMPL
+#define FORTH_16BIT
 #include "forth.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,20 +102,22 @@ bool assemble(forth_t* forth, const char* src, forth_word_t len) {
 }
 
 int main(int argc, char **argv) {
-	forth_t* forth = malloc(1024 * 64 * 4);
-	if (forth_clear(forth, (1024 * 64), 1024, 4096) != 0) {
+	forth_t* forth = malloc(1024 * 24 * sizeof(forth_word_t));
+	if (forth_clear(forth, (1024 * 24), 1024, 4096) != 0) {
 		fprintf(stderr, "Couldn't initialise.\n");
 		return -1;
 	}
 
-	fprintf(stderr, "Bootstrapping.\n");
+    fprintf(stdout, "Zak's simple FORTH-like system. You're running in %d-bit mode.\n", (sizeof(forth_word_t) * 8));
+
+	//fprintf(stderr, "Bootstrapping.\n");
 
 	while (forth_step(forth, &simplecallback, NULL) == 0) {
 		// System is running...
         // This is only in case future/user-modified implementations insert any startup code in the VM themselves. Otherwise will stop immediately.
 	}
 
-    fprintf(stderr, "Registering system functions.\n");
+    //fprintf(stderr, "Registering system functions.\n");
     forth_setlookupinstr(forth, "sys2", forth_encode(forth, FORTH_OP_CALLSYS, 2));
     forth_setlookupinstr(forth, "sys3", forth_encode(forth, FORTH_OP_CALLSYS, 3));
     forth_setlookupinstr(forth, "sys1", forth_encode(forth, FORTH_OP_CALLSYS, 1));
