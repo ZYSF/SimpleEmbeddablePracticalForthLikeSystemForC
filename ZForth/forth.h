@@ -5,6 +5,7 @@
  * No copyright, no warranty, only code.
  * Use the MIT or BSD licenses if you prefer. I don't require (or forbid) attribution.
  * Peace, Love and Buddhism for all.
+ *
  * -Zak.
  */
 
