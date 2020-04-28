@@ -7,7 +7,7 @@ Like it says on the box. No frills.
 
 * Supports simple reverse-polish stack-based operations, e.g. `1 1 +` would result in `2` being pushed to the stack
 * Supports defining named words for complex behaviour (but requires some support to add new words to the dictionary from within the system, i.e. there's no built-in function for that exposed within the VM but it's easily accessible from within native calls or elsewhere in the host application)
-* Suitable for use in real-time applications (each interpreter step is of bounded complexity, there is no instruction that e.g. copies a whole array or searches a whole list, so a host program can easily run embedded programs in short bursts while still checking sensors and such regularly without ever skipping a beat - and importantly without relying on harder-to-debug interrupt setups)
+* Suitable for use in real-time applications (each interpreter step is of bounded complexity and calls back into host code can be delayed/repeated later by returning an error code, there is no instruction that e.g. copies a whole array or searches a whole list, so a host program can easily run embedded programs in short bursts while still checking sensors and such regularly without ever skipping a beat - and importantly without relying on harder-to-debug interrupt setups)
 * Implemented entirely in a C header for easy embedding in portable/native applications (a very simple example is given in main.c)
 * Only defines static/inline functions (so a host application can include multiple versions or configurations of the VM without them conflicting, provided they're used in different modules of the host application)
 * Programs within the VM are entirely encapsulated within a single array, the VM doesn't require any dynamic memory allocations or other complex interactions with the host environment
@@ -33,7 +33,7 @@ Primarily, licensing and portability. There are a number of "portable", "simple"
 
 This implementation focuses on getting the essential parts of FORTH right; It works entirely within a 32-bit word array (whether that
 array is allocated statically or dynamically is up to downstream users) and, aside from the assembler and debugging functions, it operates
-entirely in small, bounded-complexity steps, so it's suitable for implementing complex multitasking and, particularly, multimedia-capable systems. The program counter, stack pointers and other such information are all stored in normal program memory so (aside from I/O) no outside state management is required, making it extremely easy and efficient to pause/resume/load/save programs.
+entirely in small, bounded-complexity steps (and host program callbacks can be designed the same way), so it's suitable for implementing complex multitasking and, particularly, multimedia-capable systems. The program counter, stack pointers and other such information are all stored in normal program memory so (aside from I/O) no outside state management is required, making it extremely easy and efficient to pause/resume/load/save programs.
 
 Other implementations often focus on standards compliance and self-hosting, despite the available FORTH standards being horrible and most real-world programs not benefiting from an iterative programming system.
 
